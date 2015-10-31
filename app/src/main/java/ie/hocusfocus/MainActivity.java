@@ -3,8 +3,10 @@ package ie.hocusfocus;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.axio.melonplatformkit.AnalysisResult;
@@ -14,18 +16,29 @@ import com.axio.melonplatformkit.SignalAnalyzer;
 import com.axio.melonplatformkit.listeners.IDeviceManagerListener;
 import com.axio.melonplatformkit.listeners.ISignalAnalyzerListener;
 
+import java.util.Arrays;
+
 import ie.hocusfocus.utils.MelonUtils;
+import ie.hocusfocus.utils.RollingMovingAverage;
+import ie.hocusfocus.utils.RollingMovingMinimum;
 
 public class MainActivity extends AppCompatActivity implements IDeviceManagerListener {
 
     private String mMelonName;
     private TextView tvFocus;
+    private ImageView mainImage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         tvFocus = (TextView) findViewById(R.id.tvFocus);
+        mainImage = (ImageView) findViewById(R.id.mainImage);
+
+        mainImage.setImageResource(R.drawable.serene);
+        // the rolling moving average setup
+        Arrays.fill(initialValues, 0.0f);
+
     }
 
     @Override
@@ -43,11 +56,12 @@ public class MainActivity extends AppCompatActivity implements IDeviceManagerLis
         DeviceManager.getManager().addListener(this);
         DeviceManager.getManager().startScan();
 
-
         boolean connected = false;
         for (DeviceHandle deviceHandle : DeviceManager.getManager().getConnectedDevices()) {
             if (MelonUtils.getMelonName(deviceHandle).equals(mMelonName)) {
+
                 setAnalyzer(deviceHandle);
+
                 connected = true;
             }
         }
@@ -59,8 +73,8 @@ public class MainActivity extends AppCompatActivity implements IDeviceManagerLis
                 }
             }
         }
-    }
 
+    }
 
 
     @Override
@@ -147,6 +161,8 @@ public class MainActivity extends AppCompatActivity implements IDeviceManagerLis
 
                 tvFocus.setText("Current Focus: " + leftChannelAnalysis.getFocusScore());
 
+                if(isSereneScene)
+                    watchFocus(leftChannelAnalysis.getFocusScore());
 
             }
         });
@@ -155,4 +171,39 @@ public class MainActivity extends AppCompatActivity implements IDeviceManagerLis
         deviceHandle.startStreaming();
         DeviceManager.getManager().stopScan();
     }
+
+    private boolean isSereneScene = true;
+
+    // seconds * samples per second... 2500 is a mad guess
+    private int watchFocusLength = 2500;
+
+    private float isFocusedThreshold = 0.6f;
+
+    Float[] initialValues = new Float[watchFocusLength];
+    RollingMovingMinimum rma = new RollingMovingMinimum(initialValues);
+
+    private void watchFocus(float focusScore) {
+
+        rma.add(focusScore);
+
+        if(rma.getValue()>isFocusedThreshold){
+            setNextPhoto();
+            isSereneScene = false;
+            Arrays.fill(initialValues, 0.0f);
+        }
+
+    }
+
+
+    private void setNextPhoto() {
+        Log.i("ie.hocusfocus", "setNextPhoto()");
+
+    }
+
+    // watch user's focus, when focus is above threshold for 15 seconds, move on to next image
+
+    // show image for five seconds, record EEG for this period, go back to calming image
+
+
+
 }
