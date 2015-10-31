@@ -29,14 +29,14 @@ public class MainActivity extends AppCompatActivity implements IDeviceManagerLis
     private ImageView mainImage;
 
     // seconds * samples per second... 2500 is a mad guess
-    private int watchFocusLength = 2500;
+    private int watchFocusLength = 100;
 
     private float isFocusedThreshold = 0.6f;
 
     Float[] initialValues = new Float[watchFocusLength];
 
 
-    RollingMovingMinimum rma;
+    RollingMovingAverage rma;
 
 
     @Override
@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity implements IDeviceManagerLis
         mainImage.setImageResource(R.drawable.serene);
         // the rolling moving average setup
         Arrays.fill(initialValues, 0.0f);
-        rma = new RollingMovingMinimum(initialValues);
+        rma = new RollingMovingAverage(initialValues);
 
     }
 
@@ -191,6 +191,8 @@ public class MainActivity extends AppCompatActivity implements IDeviceManagerLis
 
         rma.add(focusScore);
 
+        Log.i("ie.hocusfocus", ""+rma.getValue());
+
         if(rma.getValue()>isFocusedThreshold){
             setNextPhoto();
             isSereneScene = false;
@@ -202,6 +204,8 @@ public class MainActivity extends AppCompatActivity implements IDeviceManagerLis
 
     private void setNextPhoto() {
         Log.i("ie.hocusfocus", "setNextPhoto()");
+
+        mainImage.setImageResource(R.drawable.brian);
 
     }
 
