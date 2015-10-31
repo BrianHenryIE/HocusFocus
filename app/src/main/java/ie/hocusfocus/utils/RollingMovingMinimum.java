@@ -5,16 +5,20 @@ package ie.hocusfocus.utils;
  */
 public class RollingMovingMinimum extends NumberFixedLengthFifoQueue {
 
-    private float minValue;
-
     public RollingMovingMinimum(Number[] initialValues) {
         super(initialValues);
-        minValue = 1.0f;
+
 
     }
 
     public float getValue() {
-        return minValue;
+        Float min = 1.0f;
+        for(Number n : ring){
+            Float f = n.floatValue();
+            if(f<min)
+                min = f;
+        }
+        return min;
     }
 
     @Override
@@ -26,14 +30,6 @@ public class RollingMovingMinimum extends NumberFixedLengthFifoQueue {
     public boolean offer(Number newest) {
 
         boolean res = super.offer(newest);
-
-        Float min = 1.0f;
-        for(Number n : ring){
-            Float f = n.floatValue();
-            if(f<min)
-                min = f;
-        }
-        minValue = min;
 
         return res;
     }

@@ -28,6 +28,17 @@ public class MainActivity extends AppCompatActivity implements IDeviceManagerLis
     private TextView tvFocus;
     private ImageView mainImage;
 
+    // seconds * samples per second... 2500 is a mad guess
+    private int watchFocusLength = 2500;
+
+    private float isFocusedThreshold = 0.6f;
+
+    Float[] initialValues = new Float[watchFocusLength];
+
+
+    RollingMovingMinimum rma;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,6 +49,7 @@ public class MainActivity extends AppCompatActivity implements IDeviceManagerLis
         mainImage.setImageResource(R.drawable.serene);
         // the rolling moving average setup
         Arrays.fill(initialValues, 0.0f);
+        rma = new RollingMovingMinimum(initialValues);
 
     }
 
@@ -174,13 +186,6 @@ public class MainActivity extends AppCompatActivity implements IDeviceManagerLis
 
     private boolean isSereneScene = true;
 
-    // seconds * samples per second... 2500 is a mad guess
-    private int watchFocusLength = 2500;
-
-    private float isFocusedThreshold = 0.6f;
-
-    Float[] initialValues = new Float[watchFocusLength];
-    RollingMovingMinimum rma = new RollingMovingMinimum(initialValues);
 
     private void watchFocus(float focusScore) {
 
